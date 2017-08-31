@@ -1,0 +1,139 @@
+
+
+
++=========================================================================================================================
+|dns_lib|
++-------+
+
+**OK**int build_dns_message_aaa(DNS_MESSAGE *msg, char **output);
+**OK**int build_dns_message_answer(DNS_MESSAGE *msg, char **output);
+**OK**int build_dns_message_authority(DNS_MESSAGE *msg, char **output);
+**OK**int build_dns_message_additional(DNS_MESSAGE *msg, char **output);
+
+**OK**int insert_dns_message_answer(DNS_MESSAGE *message, char *buffer, int buf_length);
+**OK**int insert_dns_message_authority(DNS_MESSAGE *message, char *buffer, int buf_length);
+**OK**int insert_dns_message_additional(DNS_MESSAGE *message, char *buffer, int buf_length);
+
+
++==================================================================================================
+
+
++===================================================================================================
+|args.c|
++------+
+
+
++===================================================================================================
+
++===================================================================================================
+|dns_resolver|
++------------+
+
+Arguments system:
+
+There are 2 types how program can be run.
+First type is 'run-output-close'
+Second is 'run-editor_loop-close'
+
+in examples below 'dns' is a name of compiled program.
+text in '{ }' are comments.
+
+
+In the first case user puts some args as standard program arguments, eg.
+
+./dns -some_argument_1 -some_arg_2
+
+then program shows result (output) and close.
+Second case is more complicated, user give some special arg
+
+./dns -some_special_arg 
+
+Then programs runs and in loop takes from standard input commands and executes it.
+This two cases with parameters are described below in details.
+
+First case:
+run-output-close:
+
+args:
+
+standard arguments:
+
+-help
+/?
+-?
+/help
+
+Show help.
+
+-server [server ip]   -name [domain name]
+-server [CONST ALIAS] -name [domain name]
+-server ([CONST ALIAS] or [server ip]) -prot [UDP/TCP type]
+ 
+CONST ALIAS are defined as:
+
+ROOT_X
+where X is a first label of root-servers domains.
+For example:
+
+ROOT_A (means a.root-server.org       )
+ROOT_B (means b.root-server.org       )
+ROOT_K (means k.root-server.org etc...)
+
+prot TYPE:
+protocols which can be used are:
+udp
+tcp
+default protocol is udp.
+
+
+Example question to google DNS server for stackoverflow.com address:
+
+./dns -server 8.8.8.8 -name www.stackoverflow.com
+OR
+./dns -server 8.8.8.8 -name stackoverflow.com
+OR
+./dns -server 8.8.8.8 -name www.stackoverflow.com -prot tcp
+
+Additional arguments:
+
+-v  (show informations what happend)
+-vv (show more informations what happend)
+
+
+Second case:
+first parameter must be -builder:
+
+./dns -builder
+
+then programs runs main loop.
+
+./dns -build
+>> [BUILD MODE]
+>> 
+
+to exit this loop just enter 'exit'
+
+./dns -build
+>> [BUILD MODE]
+>> exit {input text}
+>> closing.
+
+
+
+ 
+???????????????????????????????????????
+
+
+
+
+
++===================================================================================================
+
+------------------------------
+
+
+
+
+
+
+
