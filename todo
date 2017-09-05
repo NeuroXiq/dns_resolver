@@ -48,7 +48,7 @@ Second case is more complicated, user give some special arg
 
 ./dns -some_special_arg 
 
-Then programs runs and in loop takes from standard input commands and executes it.
+Then programs runs in loop and takes from standard input commands and executes it.
 This two cases with parameters are described below in details.
 
 First case:
@@ -115,7 +115,7 @@ to exit this loop just enter 'exit'
 
 ./dns -build
 >> [BUILD MODE]
->> exit {input text}
+>> exit
 >> closing.
 
 

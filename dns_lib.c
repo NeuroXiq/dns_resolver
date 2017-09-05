@@ -1,11 +1,11 @@
 #ifndef _DNS_LIB_C__
 #define _DNS_LIB_C__
 
-#include "dns_lib.h"
 #include <stdlib.h>
-#include "debug.c"
-//#include "dns_msg_print.c"
-#include "dns_error.c"
+#include <string.h>
+#include "dns_lib.h"
+#include "dns_msg_error.c"
+
 
 #define SWAP_WORD_BYTES(x) x = ((x << 8) | (x >> 8))
 #define SWAP_DWORD_BYTES(x) x = \
@@ -19,7 +19,7 @@
 *
 */
 int build_dns_message(DNS_MESSAGE *dns_message, char **output)
-{
+{	
 	if(dns_message == NULL)
 	{
 		
@@ -131,7 +131,7 @@ int build_dns_message_question(DNS_MESSAGE *dns_message, char **output)
 	
 	for(int i = 0; i < question_count; i++)
 	{
-		qname_length = strlen(dns_message->Question->QNAME) + 1; //zero-byte is also included. 
+		qname_length = strlen(dns_message->Question[i].QNAME) + 1; //zero-byte is also included. 
 		
 		//4 for QTYPE and QCLASS int16.		
 		chunk_length += qname_length + 4;
@@ -144,8 +144,8 @@ int build_dns_message_question(DNS_MESSAGE *dns_message, char **output)
 		dns_message->Question[i].QNAME,
 		qname_length);
 		
-		qtype =  dns_message->Question->QTYPE;
-		qclass = dns_message->Question->QCLASS;
+		qtype =  dns_message->Question[i].QTYPE;
+		qclass = dns_message->Question[i].QCLASS;
 				
 		//little-endian
 		qtype = SWAP_WORD_BYTES(qtype);
@@ -196,7 +196,7 @@ int build_dns_message_resource(DNS_MESSAGE_RESOURCE *resource, int count, char *
 	
 	for(int i = 0; i < count; i ++)
 	{ 
-		int qname_length = strlen(resource->NAME);
+		int qname_length = strlen(resource->NAME) + 1; // zero-byte must be included
 		last_length = qname_length + const_addition + resource->RDLENGTH;
 		full_length += last_length;
 		full_output = realloc(full_output,full_length);
@@ -277,7 +277,7 @@ MESSAGE_PARSE_RESULT* get_message(char *data, int buffer_length)
 	header_len = insert_dns_message_header(result->error, info);
 	
 	/*
-	* If some errors occurs OR if 'error' contains negative value, set 'error' to positive.
+	* If some errors occurs OR if 'error' contains positive value, set 'error' to positive value.
 	* Initial value of 'error' is zero.
 	*/
 	
@@ -318,13 +318,6 @@ MESSAGE_PARSE_RESULT* get_message(char *data, int buffer_length)
 		printf("additional:%d\n", additional_len);
 	}
 	
-	//printf("header: %d\n", header_len);
-	//printf("quest: %d\n", question_len);
-	//printf("ans: %d\n", answer_len);
-	//printf("auth: %d\n", authority_len);
-	//printf("addit: %d\n", additional_len);
-	
-	
 	if(error)
 	{
 		result->type = RESULT_ERROR;
@@ -359,12 +352,12 @@ int insert_dns_message_header(ERROR_INFO *error, PARSING_INFO *info)
 	}
 	
 	header->ID[0] = buffer[0];
-	header->ID[1] = buffer[1];
+	header->ID[1] = buffer[1]; 
 	
 	
 	// buffer[2] and buffer[3]: 
 	uint16_t bit_section = *(uint16_t*)(&buffer[2]);
-	bit_section = SWAP_WORD_BYTES(bit_section); // data is in big endian.
+	bit_section = SWAP_WORD_BYTES(bit_section); // now data is in big endian.
 	
 	header->QR = (bit_section & QR_MASK) >> QR_MASK_SHIFT;
 	header->Opcode = (bit_section & OPCODE_MASK) >> OPCODE_MASK_SHIFT;
@@ -401,7 +394,6 @@ int insert_dns_message_question(ERROR_INFO *error, PARSING_INFO *info)
 	
 	if(info->count > 0)
 	{
-		//info->insert = calloc(sizeof(DNS_MESSAGE_QUESTION), info->count);
 		*info->insert = calloc(sizeof(DNS_MESSAGE_QUESTION), info->count);
 		question = (DNS_MESSAGE_QUESTION*)(*info->insert);
 	}
@@ -414,7 +406,7 @@ int insert_dns_message_question(ERROR_INFO *error, PARSING_INFO *info)
 	{
 		char *message_name;
 		int chunk_string_length;
-		//readed qname == readed bytes from qname section (compressed message)
+		
 		int readed_qname = extract_message_name(
 		buffer,
 		offset,
@@ -465,8 +457,6 @@ int insert_dns_message_resource(ERROR_INFO *error, PARSING_INFO *info)
 	if(resource_count == 0)
 		return 0;
 	
-	
-	
 	int next_offset = start_offset;
 	int all_readed_bytes = 0;
 	
@@ -474,8 +464,6 @@ int insert_dns_message_resource(ERROR_INFO *error, PARSING_INFO *info)
 	{
 		int decompressed_name_length = -1234;
 		char *decompressed_name;
-		
-		//printf("Extracting name offset: %d \n",next_offset); <- tutaj nie działa (zły pointer na nazwę)
 		
 		int name_section_length = extract_message_name(
 		buffer, 
@@ -557,7 +545,7 @@ int extract_message_name(char *buffer, int start_offset,  int buffer_length, cha
 	
 	int max = buffer_length > 255 ? 255 : buffer_length;
 	
-	int temp_len = max; // max of dns qname is 255 bytes in every row
+	int temp_len = max; // max of dns qname is 255 bytes
 	char *temp = calloc(temp_len, 1);
 	int met_ptr = 0; // msg can be compressed and can contain only 1 pointer
 	int uncompressed_size = 0;
@@ -594,15 +582,10 @@ int extract_message_name(char *buffer, int start_offset,  int buffer_length, cha
 			if(0 == met_ptr)
 			{readed_from_qname_section += 2;}
 			
-			if(met_ptr) // pointer can appear only once
-			{
-				//free(temp);
-				//return -1;
-			}
 			met_ptr = 1;
 			
 			uint16_t msg_ptr = *(uint16_t*)(buffer + index);
-			SWAP_WORD_BYTES(msg_ptr); // convert to big endian;
+			SWAP_WORD_BYTES(msg_ptr); // convert to little endian;
 			msg_ptr &= 0x3FFF; // first 2 bits must be removed
 			
 			//ptr is out of array bounds ? 
@@ -614,15 +597,12 @@ int extract_message_name(char *buffer, int start_offset,  int buffer_length, cha
 			//jump where pointer points to and continue process
 			index = msg_ptr;
 			
-			
-			
 			continue;
 		}
 		
 		temp[uncompressed_size] = buffer[index];
 		if(buffer[index] == 0)
 			break;
-		
 		
 		index++;
 		uncompressed_size++;
@@ -632,7 +612,6 @@ int extract_message_name(char *buffer, int start_offset,  int buffer_length, cha
 			readed_from_qname_section++;
 		}
 	}
-	
 	
 	uncompressed_size++;
 	if(met_ptr == 0) // readed only qname section  ?

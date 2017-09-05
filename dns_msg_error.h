@@ -1,5 +1,5 @@
-#ifndef _DNS_ERROR__
-#define _DNS_ERROR__
+#ifndef _DNS_MSG_ERROR__
+#define _DNS_MSG_ERROR__
 
 typedef enum PARSE_ERROR_TYPE
 {
