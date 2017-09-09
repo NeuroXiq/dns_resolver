@@ -1,6 +1,15 @@
 #include "program_error.h"
 #include <string.h>
 
+/*
+*
+* This file contains functions, which build some error messages 
+* for dns_resolver executable. This file not include building/parsing DNS_MESSAGE errors.
+* To check errors for DNS_MESSAGE parsing/building check dns_msg_error.c file.
+*
+*/
+
+
 char* perror_empty_args()
 {
 	char *error = "Argument list are empty.\n"
