@@ -9,7 +9,6 @@
 *
 */
 
-
 char* perror_empty_args()
 {
 	char *error = "Argument list are empty.\n"
