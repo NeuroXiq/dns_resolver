@@ -1,5 +1,6 @@
 #include "dns_msg_error.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 int error_header(ERROR_INFO* error, char *message)
 {

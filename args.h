@@ -8,8 +8,7 @@ typedef struct ARGS_INFO
 	
 } ARGS_INFO;
 
-int args_contains(ARGS_INFO* args, char *arg);
-ARGS_INFO args_get_args(int argc, char *argv[]);
+int arg_contains(ARGS_INFO* args, char *arg);
 char* arg_get_value(ARGS_INFO* args, char *arg);
 
 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "debug.h"
 
 #define DEBUG_SET 1
 #define ABS(x) (x >= 0 ? (x) : (-x))
@@ -42,8 +43,7 @@ do 							  \
 }\
 while(0) 
 
-int DEBUG_hex_dump(char *s, int l, int rs);
-int DEBUG_chars_count_in_int(int i);
+
 
 int DEBUG_hex_dump(char *start, int len, int row_size)
 {

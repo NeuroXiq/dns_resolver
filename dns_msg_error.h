@@ -20,6 +20,6 @@ int error_header(ERROR_INFO *error, char *message);
 int error_question_qname_format(ERROR_INFO *error, int offset);
 int error_question_qname_size(ERROR_INFO *error, int offset, int real_qname_size);
 int error_resource_name_format(ERROR_INFO *error, int offset);
-
+int error_resource_out_of_buffer(ERROR_INFO *error, char*, int, int);
 
 #endif

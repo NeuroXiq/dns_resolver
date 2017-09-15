@@ -3,11 +3,11 @@
 //#endif
 
 #include "dns_resolver.h"
-#include "debug.c"
-#include "winsock_handler.c"
+#include "debug.h"
+#include "winsock_handler.h"
 #include "dns_servers_info.h"
-#include "dns_msg_print.c"
-#include "program_error.c"
+#include "program_error.h"
+#include "dns_lib.h"
 
 #define GOOGLE "8.8.8.8"
 
@@ -163,7 +163,7 @@ char* prepare_valid_ip_string(char *arg_ip_string)
 	// maybe its constant value (ROOT_A, ROOT_B ???)
 	char *ip = get_root_dns_server_ip(arg_ip_string);
 	// if its valid const value, function above returns pts to string ip
-	// otherwise returns null.
+	// otherwise returns null. In both cases we can return this value.
 	
 	return ip;
 }
@@ -266,7 +266,7 @@ int is_ipv4_string(char *ip_string)
 		}
 		else 
 		{
-			//some char which cannot be in IP string
+			//some char which cannot be in IP string (not number and dot)
 			ok = -1;
 			break;
 		}

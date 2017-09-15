@@ -1,10 +1,12 @@
 #include "program_error.h"
 #include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 /*
 *
 * This file contains functions, which build some error messages 
-* for dns_resolver executable. This file not include building/parsing DNS_MESSAGE errors.
+* for dns_resolver executable file. This file do not include building/parsing DNS_MESSAGE errors.
 * To check errors for DNS_MESSAGE parsing/building check dns_msg_error.c file.
 *
 */

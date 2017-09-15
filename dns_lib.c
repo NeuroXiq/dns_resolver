@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "dns_lib.h"
-#include "dns_msg_error.c"
+#include "dns_msg_error.h"
 
 
 #define SWAP_WORD_BYTES(x) x = ((x << 8) | (x >> 8))
@@ -282,7 +282,7 @@ MESSAGE_PARSE_RESULT* get_message(char *data, int buffer_length)
 	*/
 	
 	SET_ERROR(error, header_len);
-	printf("header:%d\n", header_len);
+	//printf("header:%d\n", header_len);
 	
 	if(!error)
 	{
@@ -290,7 +290,7 @@ MESSAGE_PARSE_RESULT* get_message(char *data, int buffer_length)
 		question_len = insert_dns_message_question(result->error, info);
 		
 		SET_ERROR(error, question_len); 
-		printf("question:%d\n", question_len);
+		//printf("question:%d\n", question_len);
 		
 	}
 	
@@ -299,7 +299,7 @@ MESSAGE_PARSE_RESULT* get_message(char *data, int buffer_length)
 		update_parsing_info(info, &msg->Answer, question_len, msg->Header.ANCOUNT);
 		answer_len = insert_dns_message_resource(result->error, info);
 		SET_ERROR(error, answer_len);
-		printf("answer:%d\n", answer_len);
+		//printf("answer:%d\n", answer_len);
 	}
 	
 	if(!error)
@@ -307,7 +307,7 @@ MESSAGE_PARSE_RESULT* get_message(char *data, int buffer_length)
 		update_parsing_info(info,&msg->Authority, answer_len, msg->Header.NSCOUNT);
 		authority_len = insert_dns_message_resource(result->error, info);
 		SET_ERROR(error, authority_len);
-		printf("authority:%d\n", authority_len);
+		//printf("authority:%d\n", authority_len);
 	}
 	
 	if(!error)
@@ -315,7 +315,7 @@ MESSAGE_PARSE_RESULT* get_message(char *data, int buffer_length)
 		update_parsing_info(info, &msg->Additional, authority_len, msg->Header.ARCOUNT);
 		additional_len = insert_dns_message_resource(result->error, info);
 		SET_ERROR(error, additional_len);
-		printf("additional:%d\n", additional_len);
+		//printf("additional:%d\n", additional_len);
 	}
 	
 	if(error)
@@ -482,6 +482,7 @@ int insert_dns_message_resource(ERROR_INFO *error, PARSING_INFO *info)
 		
 		if(tct_section + 10 >= buffer_length) // can read type/class/ttl/rdlength data ???
 		{
+		  
 			error_resource_out_of_buffer(error, "Cannot read type/class/ttl/rdlength.\n",
 			tct_section, 10);
 			return -1;
