@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {	
 	ARGS_INFO *args = calloc(sizeof(ARGS_INFO), 1);
 	args->count = argc - 1;
-	args->arguments = (argv + 1); // ignore 1 arg (path of exe file)
+	args->arguments = (argv + 1); // ignore first arg (path of exe file)
 	
 	execute_args(args);
 	
