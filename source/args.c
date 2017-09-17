@@ -1,5 +1,5 @@
 #include <string.h>
-#include "args.h"
+#include "../headers/args.h"
 
 int arg_contains(ARGS_INFO* args, char *arg)
 {

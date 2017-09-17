@@ -3,8 +3,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "dns_lib.h"
-#include "dns_msg_error.h"
+#include "../headers/dns_lib.h"
+#include "../headers/dns_msg_error.h"
 
 
 #define SWAP_WORD_BYTES(x) x = ((x << 8) | (x >> 8))

@@ -2,12 +2,13 @@
 //#define WIN32_LEAN_AND_MEAN
 //#endif
 
-#include "dns_resolver.h"
-#include "debug.h"
-#include "winsock_handler.h"
-#include "dns_servers_info.h"
-#include "program_error.h"
-#include "dns_lib.h"
+#include "../headers/dns_resolver.h"
+#include "../headers/debug.h"
+#include "../headers/winsock_handler.h"
+#include "../headers/dns_servers_info.h"
+#include "../headers/program_error.h"
+#include "../headers/dns_lib.h"
+#include "../headers/args.h"
 
 #define GOOGLE "8.8.8.8"
 

@@ -1,8 +1,8 @@
 #ifndef _DNS_RESOLVER__
 #define _DNS_RESOLVER__
 
-#include "args.h"
-#include "dns_lib.h"
+#include "../headers/args.h"
+#include "../headers/dns_lib.h"
 
 typedef enum REQUEST_PROCESS_RESULT_TYPE
 {

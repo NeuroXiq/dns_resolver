@@ -2,7 +2,7 @@
 #define _DNS_LIB_H__
 
 #include <stdint.h>
-#include "dns_msg_error.h"
+#include "../headers/dns_msg_error.h"
 
 /*
 *
