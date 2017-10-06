@@ -1,0 +1,8 @@
+rcf1035:
+Contains basic informations about DNS, how server/resolver works.
+Provides protocol format using to communication with DNS servers.
+
+IMPROTANT: 
+Opcode [Question section format] are obsolated by:
+draft-hall-status-opcode-00-1
+============================================
