@@ -184,6 +184,7 @@ typedef struct PARSING_INFO
 
 /*
 *  Conversion from 'DNS_MESSAGE' struct to 'char array'.
+*  If build success returs non-negative value.
 */
 int build_dns_message(DNS_MESSAGE *dns_message, char **output);
 int build_dns_message_header(DNS_MESSAGE *msg, char **output);

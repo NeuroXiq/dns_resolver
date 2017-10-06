@@ -17,6 +17,7 @@ typedef struct SOCK_HANDLER
  
 static SOCK_HANDLER* sh_create(char *server_ip, unsigned short server_port, int family);
 
+/* Returns WSAStartup return value */
 int sh_prepare_env(WSADATA *wsadata);
 int sh_close_env();
 

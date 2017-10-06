@@ -12,13 +12,17 @@
 
 #define GOOGLE "8.8.8.8"
 
+//#pragma comment(lib, "ws2_32.lib")
+
 int main(int argc, char *argv[])
-{	
-	ARGS_INFO *args = calloc(sizeof(ARGS_INFO), 1);
+{
+	
+	ARGS_INFO *args = calloc(10000/*(sizeof(ARGS_INFO)*/, 1);
 	args->count = argc - 1;
 	args->arguments = (argv + 1); // ignore first arg (path of exe file)
 	
 	execute_args(args);
+	
 	
 	return 0;
 }
@@ -28,7 +32,7 @@ int execute_args(ARGS_INFO *args)
 	if(args->count == 0)
 	{
 		char *message = perror_empty_args();
-		printf("%d\n",message);
+		printf("%s\n",message);
 		return 1;
 	}
 	
@@ -103,9 +107,37 @@ int execute_resolve_args(ARGS_INFO *args)
 	}
 	else rp_info->protocol = "udp";
 	
-	run_request_process(rp_info);
+	REQUEST_PROCESS_RESULT *result = run_request_process(rp_info);
+	
+	if(result->result_type == REQUEST_PROCESS_RESULT_SUCCESS)
+	{
+		unsigned char *ip_bytes = extract_ip_from_dns_answer(result->parse_result->message);
+		printf("RESOLVED: %u.%u.%u.%u\n", ip_bytes[0], ip_bytes[1],ip_bytes[2],ip_bytes[3]);
+	}
+	else
+	{
+		printf("Error 	!\n");
+		printf("%s\n",result->error->error_message);
+	}
 	
 	return 0;
+}
+
+unsigned char* extract_ip_from_dns_answer(DNS_MESSAGE *msg)
+{
+	
+	for(int i = 0; i < msg->Header.ANCOUNT; i++)
+	{
+		//type class == 1
+		if( (msg->Answer[i].TYPE == A) &&
+			(msg->Answer[i].CLASS == INTERNET))
+			{
+				return (unsigned char*)(msg->Answer[i].RDATA);
+			}
+		
+	}
+	int *null_addr = calloc(4,1);
+	return (unsigned char*)(null_addr);
 }
 
 int mandatory_args_exist(ARGS_INFO *args, char **error)
@@ -139,26 +171,161 @@ int mandatory_args_exist(ARGS_INFO *args, char **error)
 
 REQUEST_PROCESS_RESULT* run_request_process(REQUEST_PROCESS_INFO *info)
 {
+	
 	REQUEST_PROCESS_RESULT *result = calloc(sizeof(REQUEST_PROCESS_RESULT), 1);
 	result->error = calloc(sizeof(REQUEST_PROCESS_ERROR), 1);
 	
-	char *ip = prepare_valid_ip_string(info->dns_server_ip);
-	if(ip == NULL)
+	DNS_MESSAGE* message;
+	
+	int preparing_result = prepare_dns_message_struct(info, &message);	
+	
+	if(preparing_result < 0)
 	{
 		result->result_type = REQUEST_PROCESS_RESULT_ERROR;
-		result->error->error_message = "Invalid IP address string.\n";
+		result->error->error_message = "INTERNAL_ERROR__ :: Cannot create DNS_MESSAGE struct.";
 		return result;
 	}
 	
+	MESSAGE_PARSE_RESULT *resolving_result = try_resolve(info, message);
 	
+	result->result_type = REQUEST_PROCESS_RESULT_SUCCESS;
 	
+	result->parse_result = resolving_result;
+	
+	//destroy_dns_message(message); // free all allocated spac in DNS_MESSAGE
+	
+	return result;
+}
+
+MESSAGE_PARSE_RESULT* try_resolve(REQUEST_PROCESS_INFO *info, DNS_MESSAGE *request_data)
+{
+	
+	char *raw_dns_message;
+	int raw_request_len = build_dns_message(request_data, &raw_dns_message);
+	
+	//winsock_handler -> sending/receiving packets.
+	WSADATA *wdata;
+	int r = sh_prepare_env(wdata);
+	SOCK_HANDLER *shandler = sh_create_udp(info->dns_server_ip, 53);
+	
+	sh_send(shandler, raw_dns_message, raw_request_len);
+	
+	char *raw_received_bytes = calloc(0x1000, 1);
+	int raw_received_len = sh_receive(shandler, raw_received_bytes, 0x1000);
+	
+	MESSAGE_PARSE_RESULT *parsed_message = get_message(raw_received_bytes, raw_received_len);
+	
+	sh_delete_handler(shandler);
+	sh_close_env();
+	
+	return parsed_message;
+}
+
+int prepare_dns_message_struct(REQUEST_PROCESS_INFO *info, DNS_MESSAGE **out_message)
+{
+	/* ip can contains some constant strings e.g. ROOT_A, it must replaced with some ip data eg.(123.23.11.32) */
+	char *ip = prepare_valid_ip_string(info->dns_server_ip);
+	printf("%s\n", ip);
+	if(ip == NULL)
+	{
+		return -1;
+	}
+	
+	// ip can be converted from constant but if contains valid ip string
+	// nothing is changed. If constant was changed we can free it.
+	if(ip != info->dns_server_ip)
+	{
+		free(info->dns_server_ip);
+	}
+	
+	info->dns_server_ip = ip;
+	
+	DNS_MESSAGE *message = create_dns_msg_struct(info);
+	if(message == NULL)
+	{
+		// error handling
+		//out_error_msg = "INTERNAL_ERROR :: \n \
+		//							   \rCannot build DNS_MESSAGE with specified data.";
+		return -1;
+	}
+	
+	*out_message = message;
+	
+	return 1;
+}
+
+DNS_MESSAGE* create_dns_msg_struct(REQUEST_PROCESS_INFO *info)
+{
+	char *dns_format_domain_name = create_dns_format_name(info->domain_name);
+	
+	DNS_MESSAGE *dns_msg = calloc(sizeof(DNS_MESSAGE), 1);
+	
+	/*  DNS MESSAGE HEADER */
+	
+	dns_msg->Header.ID[0] = 'N';
+	dns_msg->Header.ID[1] = 'X';
+	
+	dns_msg->Header.QR = QUERY; //query/response
+	dns_msg->Header.Opcode = STANDARD_QUERY;
+	dns_msg->Header.AA =
+	dns_msg->Header.TC =
+	dns_msg->Header.RA =
+	dns_msg->Header.Z =
+	dns_msg->Header.RCODE = 0;
+	dns_msg->Header.RD = 1;
+	
+	dns_msg->Header.QDCOUNT = 1; // MUST be 1 query
+	dns_msg->Header.ANCOUNT = 0;
+	dns_msg->Header.NSCOUNT = 0;
+	dns_msg->Header.ARCOUNT = 0;
+	
+	/* DNS MESSAGE QUESTION */
+	
+	dns_msg->Question = calloc(sizeof(DNS_MESSAGE_QUESTION) ,1);
+	dns_msg->Question->QNAME = dns_format_domain_name;
+	dns_msg->Question->QTYPE = A; // A == host address (see TYPE_TYPE enum in dns_lib.h or RFC)
+	dns_msg->Question->QCLASS = INTERNET;
+	
+	return dns_msg;
+}
+
+char* create_dns_format_name(char *name)
+{ 
+
+	int len = strlen(name);
+	char *formated = calloc(len+2,1); // + null byte + first len byte
+	
+	int counter = 0;
+	int next_insert = 0;
+	
+	for(int i = 0; i < len; i++)
+	{
+		if((name[i] != '.') && (i < len))
+		{
+			formated[i + 1] = name[i];
+			counter++;
+		}
+		else 
+		{
+			//meet dot now
+			formated[next_insert] = counter;
+			next_insert = i + 1;
+			counter = 0;
+		}
+	}
+	
+	formated[next_insert] = counter; 
+	
+	return formated;
 }
 
 char* prepare_valid_ip_string(char *arg_ip_string)
 {
 	// arg is something like: "124.32.21.1" ?
-	if(is_ipv4_string(arg_ip_string))
-	{
+	int validation = is_ipv4_string(arg_ip_string);
+	
+	if(validation >= 0)
+	{	
 		return arg_ip_string;
 	}
 	// maybe its constant value (ROOT_A, ROOT_B ???)

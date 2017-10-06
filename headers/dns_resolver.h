@@ -36,6 +36,7 @@ typedef struct REQUEST_PROCESS_RESULT
 	
 } REQUEST_PROCESS_RESULT;
 
+unsigned char* extract_ip_from_dns_answer(DNS_MESSAGE *msg);
 int execute_args(ARGS_INFO *args);
 int run_builder();
 int execute_resolve_args(ARGS_INFO *args);
@@ -44,11 +45,16 @@ int show_help();
 int vinfo(REQUEST_PROCESS_INFO *info, char *message);
 int vvinfo(REQUEST_PROCESS_INFO *info, char *message);
 char* get_root_dns_server_ip(char *constant_key);
+char* create_dns_format_name(char *name);
+int prepare_dns_message_struct(REQUEST_PROCESS_INFO *info, DNS_MESSAGE **out_message);
+MESSAGE_PARSE_RESULT* try_resolve(REQUEST_PROCESS_INFO *info, DNS_MESSAGE *request_data);
+
 
 int is_ipv4_string(char *ip_string);
 char* prepare_valid_ip_string(char *arg_ip_string);
 int is_number(char c);
 
+DNS_MESSAGE* create_dns_msg_struct(REQUEST_PROCESS_INFO *info);
 REQUEST_PROCESS_RESULT* run_request_process(REQUEST_PROCESS_INFO *info);
 
 #endif
